@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CU PriceWise — Campus Price Comparison</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* Page-level nav active logic */
+    body { overflow-x: hidden; }
+    .page { display: none; }
+    .page.active { display: block; }
+  </style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════
+     NAVBAR
+════════════════════════════════════════════ -->
+<nav class="navbar">
+  <div class="container nav-inner">
+    <a class="nav-brand" href="#" onclick="showPage('home')">
+      <span class="brand-icon">🏷️</span>
+      CU <span class="accent">PriceWise</span>
+    </a>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#" onclick="showPage('home')"     id="nav-home">Home</a></li>
+      <li><a href="#" onclick="showPage('products')" id="nav-products">Browse</a></li>
+      <li><a href="#" onclick="showPage('categories')" id="nav-categories">Categories</a></li>
+      <li><a href="#" onclick="showPage('shops')"    id="nav-shops">Shops</a></li>
+    </ul>
+    <div class="nav-actions" id="navActions">
+      <!-- Filled by JS -->
+    </div>
+    <button class="hamburger" onclick="toggleNav()">☰</button>
+  </div>
+</nav>
+
+<!-- Toast container -->
+<div class="toast-container" id="toastContainer"></div>
+<button class="scroll-top" id="scrollTopBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<!-- ════════════════════════════════════════════
+     PAGE: HOME
+════════════════════════════════════════════ -->
+<div class="page active" id="page-home">
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="container hero-inner">
+      <div class="hero-tag">🎓 Chandigarh University · Campus Price Guide</div>
+      <h1>Find the <em>cheapest products</em><br>on campus — instantly</h1>
+      <p>Compare prices across all campus shops for food, stationery, groceries & daily essentials.</p>
+      <div class="search-bar">
+        <input type="text" id="heroSearch" placeholder="Search Maggi, cold coffee, notebooks…" onkeydown="if(event.key==='Enter')heroSearchGo()">
+        <button onclick="heroSearchGo()">Search 🔍</button>
+      </div>
+      <div class="hero-stats" id="heroStats"></div>
+    </div>
+  </section>
+
+  <div class="container page-wrap">
+
+    <!-- Categories -->
+    <section class="section">
+      <div class="section-header">
+        <h2>Browse by <span class="section-title-accent">Category</span></h2>
+      </div>
+      <div class="category-grid" id="homeCategoryGrid"></div>
+    </section>
+
+    <!-- Cheapest Finds -->
+    <section class="section">
+      <div class="section-header">
+        <h2>💚 Cheapest <span class="section-title-accent">Finds</span></h2>
+        <a href="#" class="btn btn-ghost btn-sm" onclick="showPage('products',{sort:'price_asc'})">View all →</a>
+      </div>
+      <div class="product-grid" id="cheapestGrid"></div>
+    </section>
+
+    <!-- Best Rated -->
+    <section class="section">
+      <div class="section-header">
+        <h2>⭐ Best <span class="section-title-accent">Rated</span></h2>
+        <a href="#" class="btn btn-ghost btn-sm" onclick="showPage('products',{sort:'rating'})">View all →</a>
+      </div>
+      <div class="product-grid" id="bestRatedGrid"></div>
+    </section>
+
+    <!-- Popular Shops -->
+    <section class="section">
+      <div class="section-header">
+        <h2>🏪 Popular <span class="section-title-accent">Shops</span></h2>
+        <a href="#" class="btn btn-ghost btn-sm" onclick="showPage('shops')">View all →</a>
+      </div>
+      <div class="shop-grid" id="homeShopGrid"></div>
+    </section>
+
+    <!-- Recently Updated Prices -->
+    <section class="section">
+      <div class="section-header">
+        <h2>🔄 Recently <span class="section-title-accent">Updated Prices</span></h2>
+      </div>
+      <div id="recentPrices"></div>
+    </section>
+
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     PAGE: PRODUCTS
+════════════════════════════════════════════ -->
+<div class="page" id="page-products">
+  <div class="container page-wrap">
+    <div class="section-header" style="margin-bottom:20px">
+      <h2>Browse <span class="section-title-accent">Products</span></h2>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-bar">
+      <div class="filter-group search-group">
+        <label>Search</label>
+        <input type="text" id="fSearch" placeholder="Product name, brand…" oninput="applyFilters()">
+      </div>
+      <div class="filter-group">
+        <label>Category</label>
+        <select id="fCat" onchange="applyFilters()">
+          <option value="">All Categories</option>
+          <option>Food & Beverages</option>
+          <option>Snacks</option>
+          <option>Stationery</option>
+          <option>Groceries</option>
+          <option>Personal Care</option>
+          <option>Daily Essentials</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Shop</label>
+        <select id="fShop" onchange="applyFilters()">
+          <option value="">All Shops</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Min Price (₹)</label>
+        <input type="number" id="fMin" placeholder="0" min="0" oninput="applyFilters()">
+      </div>
+      <div class="filter-group">
+        <label>Max Price (₹)</label>
+        <input type="number" id="fMax" placeholder="Any" min="0" oninput="applyFilters()">
+      </div>
+      <div class="filter-group">
+        <label>Sort by</label>
+        <select id="fSort" onchange="applyFilters()">
+          <option value="">Name (A–Z)</option>
+          <option value="price_asc">Lowest Price First</option>
+          <option value="price_desc">Highest Price First</option>
+          <option value="rating">Best Rating</option>
+          <option value="value">Best Value</option>
+        </select>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="clearFilters()">Clear</button>
+    </div>
+
+    <div id="productsResultCount" style="margin-bottom:14px;font-size:.85rem;color:var(--gray)"></div>
+    <div class="product-grid" id="productsGrid"></div>
+    <div id="productsEmpty"></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     PAGE: PRODUCT DETAIL
+════════════════════════════════════════════ -->
+<div class="page" id="page-detail">
+  <div class="container page-wrap">
+    <button class="btn btn-ghost btn-sm" onclick="history.back()" style="margin-bottom:20px">← Back</button>
+    <div id="detailContent"></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     PAGE: CATEGORIES
+════════════════════════════════════════════ -->
+<div class="page" id="page-categories">
+  <div class="container page-wrap">
+    <div class="section-header" style="margin-bottom:28px">
+      <h2>All <span class="section-title-accent">Categories</span></h2>
+    </div>
+    <div id="categoriesContent"></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     PAGE: SHOPS
+════════════════════════════════════════════ -->
+<div class="page" id="page-shops">
+  <div class="container page-wrap">
+    <div class="section-header" style="margin-bottom:24px">
+      <h2>Campus <span class="section-title-accent">Shops</span></h2>
+    </div>
+    <div class="shop-grid" id="shopsGrid"></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     PAGE: SHOP DETAIL
+════════════════════════════════════════════ -->
+<div class="page" id="page-shopdetail">
+  <div class="container page-wrap">
+    <button class="btn btn-ghost btn-sm" onclick="showPage('shops')" style="margin-bottom:20px">← All Shops</button>
+    <div id="shopDetailContent"></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     PAGE: LOGIN / REGISTER
+════════════════════════════════════════════ -->
+<div class="page" id="page-auth">
+  <div class="container">
+    <div class="form-card">
+      <div class="form-title">
+        <div style="font-size:2.5rem;margin-bottom:8px">🏷️</div>
+        <h2>Welcome to CU PriceWise</h2>
+        <p style="font-size:.875rem">Sign in or create an account</p>
+      </div>
+      <div class="tab-bar">
+        <button class="tab-btn active" onclick="switchAuthTab('login')">Sign In</button>
+        <button class="tab-btn" onclick="switchAuthTab('register')">Register</button>
+      </div>
+
+      <!-- Login -->
+      <div class="tab-panel active" id="tab-login">
+        <div id="loginAlert"></div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="loginEmail" placeholder="you@cumail.in">
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="loginPwd" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()">
+        </div>
+        <button class="btn btn-primary" style="width:100%" onclick="doLogin()">Sign In</button>
+        <p style="text-align:center;margin-top:14px;font-size:.8rem;color:var(--gray)">
+          Demo admin: <strong>admin@cupricewise.in</strong> / <strong>admin123</strong><br>
+          Demo student: <strong>arjun@cumail.in</strong> / <strong>pass1234</strong>
+        </p>
+      </div>
+
+      <!-- Register -->
+      <div class="tab-panel" id="tab-register">
+        <div id="registerAlert"></div>
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" id="regName" placeholder="Your name">
+        </div>
+        <div class="form-group">
+          <label>University ID (UID)</label>
+          <input type="text" id="regUid" placeholder="e.g. 22CSE10001">
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="regEmail" placeholder="uid@cumail.in">
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="regPwd" placeholder="At least 6 characters">
+        </div>
+        <div class="form-group">
+          <label>Confirm Password</label>
+          <input type="password" id="regPwd2" placeholder="Repeat password">
+        </div>
+        <button class="btn btn-primary" style="width:100%" onclick="doRegister()">Create Account</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     PAGE: PROFILE
+════════════════════════════════════════════ -->
+<div class="page" id="page-profile">
+  <div class="container page-wrap" style="max-width:700px">
+    <div id="profileContent"></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     PAGE: ADMIN
+════════════════════════════════════════════ -->
+<div class="page" id="page-admin">
+  <div class="container page-wrap">
+    <div class="section-header" style="margin-bottom:24px">
+      <h2>⚙️ Admin <span class="section-title-accent">Dashboard</span></h2>
+    </div>
+    <div class="admin-grid">
+      <div class="admin-sidebar">
+        <div class="admin-sidebar-title">Manage</div>
+        <div class="admin-nav-item active" onclick="switchAdminPanel('shops')">🏪 Shops</div>
+        <div class="admin-nav-item" onclick="switchAdminPanel('products')">📦 Products</div>
+        <div class="admin-nav-item" onclick="switchAdminPanel('prices')">💰 Prices</div>
+        <div class="admin-nav-item" onclick="switchAdminPanel('reports')">🚩 Price Reports</div>
+        <div class="admin-nav-item" onclick="switchAdminPanel('reviews')">⭐ Reviews</div>
+        <div class="admin-nav-item" onclick="switchAdminPanel('users')">👤 Users</div>
+      </div>
+      <div class="admin-content">
+        <div class="admin-panel active" id="admin-shops">
+          <div class="section-header" style="margin-bottom:20px">
+            <h3>Campus Shops</h3>
+            <button class="btn btn-primary btn-sm" onclick="openShopModal()">+ Add Shop</button>
+          </div>
+          <div id="adminShopsTable"></div>
+        </div>
+        <div class="admin-panel" id="admin-products">
+          <div class="section-header" style="margin-bottom:20px">
+            <h3>Products</h3>
+            <button class="btn btn-primary btn-sm" onclick="openProductModal()">+ Add Product</button>
+          </div>
+          <div id="adminProductsTable"></div>
+        </div>
+        <div class="admin-panel" id="admin-prices">
+          <div class="section-header" style="margin-bottom:20px">
+            <h3>Shop Prices</h3>
+            <button class="btn btn-primary btn-sm" onclick="openPriceModal()">+ Add Listing</button>
+          </div>
+          <div id="adminPricesTable"></div>
+        </div>
+        <div class="admin-panel" id="admin-reports">
+          <h3 style="margin-bottom:20px">Price Correction Reports</h3>
+          <div id="adminReportsTable"></div>
+        </div>
+        <div class="admin-panel" id="admin-reviews">
+          <h3 style="margin-bottom:20px">Student Reviews</h3>
+          <div id="adminReviewsTable"></div>
+        </div>
+        <div class="admin-panel" id="admin-users">
+          <h3 style="margin-bottom:20px">Registered Users</h3>
+          <div id="adminUsersTable"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     FOOTER
+════════════════════════════════════════════ -->
+<footer class="footer">
+  <div class="container">
+    <p>
+      <strong>🏷️ CU PriceWise</strong> &nbsp;·&nbsp;
+      Campus Price Comparison for <strong>Chandigarh University</strong> students
+    </p>
+    <p style="margin-top:8px;font-size:.78rem">
+      ⚠️ Prices are student/admin reported and may not reflect current shop pricing. Always verify before purchasing.
+    </p>
+  </div>
+</footer>
+
+<!-- ════════════════════════════════════════════
+     MODALS
+════════════════════════════════════════════ -->
+<!-- Shop Modal -->
+<div class="modal-overlay" id="shopModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="shopModalTitle">Add Shop</h3>
+      <button class="modal-close" onclick="closeModal('shopModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="shopModalId">
+      <div class="form-group"><label>Shop Name</label><input type="text" id="smName" placeholder="e.g. Campus Mart"></div>
+      <div class="form-group"><label>Location / Block</label><input type="text" id="smLocation" placeholder="e.g. Block 10, Ground Floor"></div>
+      <div class="form-group"><label>Description</label><textarea id="smDesc" placeholder="Brief description"></textarea></div>
+      <div class="form-group"><label>Opening Hours</label><input type="text" id="smHours" placeholder="e.g. 8:00 AM – 10:00 PM"></div>
+      <div class="form-group">
+        <label>Categories (comma-separated)</label>
+        <input type="text" id="smCats" placeholder="Food & Beverages, Snacks">
+      </div>
+      <div class="form-group">
+        <label>Status</label>
+        <select id="smActive"><option value="true">Active</option><option value="false">Inactive</option></select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('shopModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveShop()">Save Shop</button>
+    </div>
+  </div>
+</div>
+
+<!-- Product Modal -->
+<div class="modal-overlay" id="productModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="productModalTitle">Add Product</h3>
+      <button class="modal-close" onclick="closeModal('productModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="productModalId">
+      <div class="form-row">
+        <div class="form-group"><label>Product Name</label><input type="text" id="pmName" placeholder="e.g. Maggi Noodles"></div>
+        <div class="form-group"><label>Brand</label><input type="text" id="pmBrand" placeholder="e.g. Nestle"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Category</label>
+          <select id="pmCat">
+            <option>Food & Beverages</option><option>Snacks</option>
+            <option>Stationery</option><option>Groceries</option>
+            <option>Personal Care</option><option>Daily Essentials</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Unit / Pack Size</label><input type="text" id="pmUnit" placeholder="e.g. 70 g pack"></div>
+      </div>
+      <div class="form-group"><label>Description</label><textarea id="pmDesc" placeholder="Short product description"></textarea></div>
+      <div class="form-group"><label>Image URL</label><input type="url" id="pmImage" placeholder="https://..."></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('productModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveProduct()">Save Product</button>
+    </div>
+  </div>
+</div>
+
+<!-- Price Modal -->
+<div class="modal-overlay" id="priceModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="priceModalTitle">Add / Update Price Listing</h3>
+      <button class="modal-close" onclick="closeModal('priceModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="priceModalId">
+      <div class="form-group"><label>Shop</label><select id="pmShop"></select></div>
+      <div class="form-group"><label>Product</label><select id="pmProduct"></select></div>
+      <div class="form-row">
+        <div class="form-group"><label>Price (₹)</label><input type="number" id="pmPrice" placeholder="0.00" min="0" step="0.5"></div>
+        <div class="form-group">
+          <label>Availability</label>
+          <select id="pmAvail"><option value="true">In Stock</option><option value="false">Out of Stock</option></select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('priceModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="savePrice()">Save Listing</button>
+    </div>
+  </div>
+</div>
+
+<!-- Review Modal -->
+<div class="modal-overlay" id="reviewModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Write a Review</h3>
+      <button class="modal-close" onclick="closeModal('reviewModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="reviewProductId">
+      <div class="form-group">
+        <label>Rating</label>
+        <div class="star-picker" id="starPicker">
+          <span class="star-pick" data-v="1" onclick="pickStar(1)">★</span>
+          <span class="star-pick" data-v="2" onclick="pickStar(2)">★</span>
+          <span class="star-pick" data-v="3" onclick="pickStar(3)">★</span>
+          <span class="star-pick" data-v="4" onclick="pickStar(4)">★</span>
+          <span class="star-pick" data-v="5" onclick="pickStar(5)">★</span>
+        </div>
+      </div>
+      <div class="form-group"><label>Comment</label><textarea id="reviewComment" placeholder="Share your experience…" rows="4"></textarea></div>
+      <div id="reviewAlert"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('reviewModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="submitReview()">Submit Review</button>
+    </div>
+  </div>
+</div>
+
+<!-- Report Modal -->
+<div class="modal-overlay" id="reportModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Report Incorrect Information</h3>
+      <button class="modal-close" onclick="closeModal('reportModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="reportSpId">
+      <div class="form-group">
+        <label>Issue Type</label>
+        <select id="reportType">
+          <option value="WRONG_PRICE">Wrong Price</option>
+          <option value="UNAVAILABLE">Product Unavailable</option>
+          <option value="SHOP_CLOSED">Shop Closed</option>
+          <option value="OTHER">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Correct Price (₹) — if applicable</label>
+        <input type="number" id="reportPrice" placeholder="Leave blank if not about price" min="0" step="0.5">
+      </div>
+      <div class="form-group"><label>Comments</label><textarea id="reportComment" placeholder="What did you observe?" rows="3"></textarea></div>
+      <div id="reportAlert"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('reportModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="submitReport()">Submit Report</button>
+    </div>
+  </div>
+</div>
+
+<!-- Location Modal -->
+<div class="modal-overlay" id="locationModal">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-header">
+      <h3 id="locationModalTitle">📍 Shop Location</h3>
+      <button class="modal-close" onclick="closeModal('locationModal')">✕</button>
+    </div>
+    <div class="modal-body" id="locationModalBody"></div>
+  </div>
+</div>
+
+<style>
+/* Star picker */
+.star-picker { display:flex; gap:8px; }
+.star-pick {
+  font-size:2rem; cursor:pointer; color:#d1d5db;
+  transition:color .15s, transform .1s;
+}
+.star-pick.active { color:#f59e0b; }
+.star-pick:hover  { transform:scale(1.2); color:#f59e0b; }
+</style>
+
+<!-- Scripts -->
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

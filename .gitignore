@@ -1,0 +1,39 @@
+# CU PriceWise — .gitignore
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor directories
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# Node (if ever added)
+node_modules/
+npm-debug.log*
+
+# Build output (if ever added)
+dist/
+build/
+
+# Environment files
+.env
+.env.local
+
+# Temporary files
+*.tmp
+*.bak
+
+# Java compiled files
+*.class
+target/
+
+# Local configuration and credentials
+application.properties
+config.properties
